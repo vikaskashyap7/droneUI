@@ -31,21 +31,46 @@ const JoystickSlider = () => {
       console.log('Received from server:', x, y, sliderVal);
     };
 
-    const sendJoystick = (x, y) => {
-      console.log("Sending joystick:", x, y);
+    // const sendJoystick = (x, y) => {
+    //   console.log("Sending joystick:", x, y);
 
-      if (socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify([x, y, null]));
-      }
-    };
+    //   if (socketRef.current.readyState === WebSocket.OPEN) {
+    //     socketRef.current.send(JSON.stringify([x, y, null]));
+    //   }
+    // };
 
-    const sendSlider = (sliderVal) => {
-      console.log("Sending slider:", sliderVal);
+    // const sendSlider = (sliderVal) => {
+    //   console.log("Sending slider:", sliderVal);
 
-      if (socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send(JSON.stringify([null, null, sliderVal]));
-      }
-    };
+    //   if (socketRef.current.readyState === WebSocket.OPEN) {
+    //     socketRef.current.send(JSON.stringify([null, null, sliderVal]));
+    //   }
+    // };
+    let lastSentJoystick = 0;
+let lastSentSlider = 0;
+const throttleTime = 50; // ms
+
+const sendJoystick = (x, y) => {
+  console.log("Sending joystick:", x, y);
+  const now = Date.now();
+  if (now - lastSentJoystick > throttleTime) {
+    if (socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify([x, y, null]));
+      lastSentJoystick = now;
+    }
+  }
+};
+
+const sendSlider = (sliderVal) => {
+  console.log("Sending slider:", sliderVal);
+  const now = Date.now();
+  if (now - lastSentSlider > throttleTime) {
+    if (socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify([null, null, sliderVal]));
+      lastSentSlider = now;
+    }
+  }
+};
 
     // ------------------- Joystick -------------------
     let joyActive = false;
@@ -75,7 +100,11 @@ const JoystickSlider = () => {
       const nx = parseFloat((x / maxDist).toFixed(2));
       const ny = parseFloat((y / maxDist).toFixed(2));
       joySet(x, y);
-      sendJoystick(nx, ny);
+    
+      // Only send if values are not both zero (avoid sending defaults during movement)
+      if (nx !== 0 || ny !== 0) {
+        sendJoystick(nx, ny);
+      }
     };
 
     const handleTouchStartJoy = (e) => {
