@@ -22,7 +22,7 @@ const JoystickSlider = () => {
     const THH = thumb.clientHeight;
 
     // Setup WebSocket
-    socketRef.current = new WebSocket('ws://localhost:8080');
+    socketRef.current = new WebSocket('https://droneui.onrender.com');
 
     socketRef.current.onmessage = (message) => {
       console.log("Received from server:", JSON.parse(message.data));
